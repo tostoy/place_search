@@ -40,7 +40,7 @@ $currentPlaceDetailsjson =2222;
                 $photo = $currentPlaceDetailsjson_ret['result']['photos'][$i];
                 $url= "https://maps.googleapis.com/maps/api/place/photo?maxwidth=750&photoreference=".$photo['photo_reference']."&key=".$googleKey;
                 $file = file_get_contents($url, false, stream_context_create($arrContextOptions));
-                file_put_contents("./image.".$i."png",$file);
+                file_put_contents("./image".$i.".png",$file);
             }
         }else {
 
@@ -140,8 +140,6 @@ $currentPlaceDetailsjson =2222;
             }else{
                 document.getElementById("photo_image").src = "http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png";
                 photos.style.display="none";
-                document.getElementById("review_image").src = "http://cs-server.usc.edu:45678/hw/hw6/images/arrow_up.png";
-                reviews.style.display="block";
             }
         }
         function showReviews() {
@@ -155,8 +153,6 @@ $currentPlaceDetailsjson =2222;
             }else{
                 document.getElementById("review_image").src = "http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png";
                 reviews.style.display="none";
-                document.getElementById("photo_image").src = "http://cs-server.usc.edu:45678/hw/hw6/images/arrow_up.png";
-                photos.style.display="block";
             }
         }
 
@@ -279,6 +275,7 @@ $currentPlaceDetailsjson =2222;
             <div id="reviewDiv"><p>click to show reviews</p>
                 <a href="#" onclick="showReviews(); return false;">
                 <img id="review_image" src="http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png" width='50' height='20'>
+                </a>
                     <div id="reviews" style="display:none">
                         <?php
                         $reviews = $place_result['reviews'];
@@ -303,6 +300,7 @@ $currentPlaceDetailsjson =2222;
             <div id="pictureDiv"><p>click to show photos</p>
                 <a href="#" onclick="showPhotos(); return false;">
                 <img  id="photo_image" src="http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png" width='50' height='20'>
+                </a>
                     <div id="photos" style="display:none">
                         <?php
                         $photos = $place_result['photos'];
@@ -315,7 +313,7 @@ $currentPlaceDetailsjson =2222;
                         }else{
                             $photo_html="<table border=\"2\">";
                             for ($i = 0; $i < sizeof($photos) && $i < 5; $i++) {
-                                $photo_html.="<tr><td><img href=\"./image.".$i."png\" src=\"image".$i."png\"></td></tr>";
+                                $photo_html.="<tr><td><a target=\"_blank\" href=\"./image".$i.".png\"><img  src=\"image".$i.".png\"></a></td></tr>";
                             }
                             $photo_html.="</table>";
                             echo $photo_html;
