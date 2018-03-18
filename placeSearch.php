@@ -107,6 +107,24 @@ $currentPlaceDetailsjson =2222;
     }
     </style>
     <script type="text/javascript">
+        window.onload= function(){
+            var category = "<?php echo $category?>";
+            var otherLocationName ="<?php echo $otherLocationName?>";
+            var options= document.getElementById("category").options;
+            for(var i =0 ;i<options.length;i++){
+                if(options[i].value===category){
+                    options[i].selected=true;
+                }
+            }
+            if(otherLocationName == ''){
+                document.getElementById("here").checked = true;
+            }else{
+                document.getElementById("otherLocation").checked = true;
+                document.getElementById('otherLocationName').disabled=false;
+                document.getElementById('otherLocationName').required=true;
+                document.getElementById('searchButton').disabled=false;
+            }
+        };
         function radioCheck() { //enable and required location text when location is checked ~
             if(document.getElementById('here').checked==true) {
                 document.getElementById('otherLocationName').disabled=true;
