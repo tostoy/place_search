@@ -42,6 +42,8 @@ $currentPlaceDetailsjson =2222;
                 $file = file_get_contents($url, false, stream_context_create($arrContextOptions));
                 file_put_contents("./image".$i.".png",$file);
             }
+         //   $currentPlaceDetailsjson = json_decode($currentPlaceDetailsjson,true);
+
         }else {
 
 
@@ -63,14 +65,15 @@ $currentPlaceDetailsjson =2222;
                 $lat = $locationGeoCodeResult["results"][0]["geometry"]["location"]["lat"];
                 $lng = $locationGeoCodeResult["results"][0]["geometry"]["location"]["lng"];
             } else {
-                $locationGeoCodejson = file_get_contents("http://ip-api.com/json");
-                $locationGeoCodeResult = json_decode($locationGeoCodejson, true);
-                $lat = $locationGeoCodeResult["lat"];
-                $lng = $locationGeoCodeResult["lon"];
+                // $locationGeoCodejson = file_get_contents("http://ip-api.com/json");
+               // $locationGeoCodeResult = json_decode($locationGeoCodejson, true);
+                $lat = $_POST["lat"];
+                $lng = $_POST["lon"];
             }
             $placesNearBy = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" . $lat . "," . $lng . "&radius=" . $distance . "&type=" . $category . "&keyword=" . $keyword . "&key=" . $googleKey;
             $placesNearByjson = file_get_contents($placesNearBy, false, stream_context_create($arrContextOptions));
 //        $placesNearByjson = 2222;
+            // $placesNearByjson = json_decode($placesNearByjson,true);
         }
     }
 ?>
@@ -124,7 +127,81 @@ $currentPlaceDetailsjson =2222;
                 document.getElementById('otherLocationName').required=true;
                 document.getElementById('searchButton').disabled=false;
             }
+            showSearchResult();
+            showReviewsAndPhotos();
         };
+        function showSearchResult(){
+            var placesNearByjson =<?php echo $placesNearByjson?>;
+            if(placesNearByjson !== 1111){
+                var result = placesNearByjson['results'];
+                var html_text = "<table border='2'><tbody>";
+                if (result.length == 0) {
+                    html_text += "<tr><td>No Records has been found</td></tr>";
+                } //establish result table data
+                else {
+                    html_text += "<tr><th>Category</th><th>Name</th><th>Address</th></tr>";
+                    for (var i = 0; i < result.length; i++) {
+                        html_text += "<tr><td><img src='" + result[i]['icon'] +
+                        "'</td><td><a href=\"#\" onclick=\"singlePlace('" +result[i]['place_id'] + "'); return false;\">" + result[i]['name'] +
+                        "</td><td><a href=\"#\" onclick=\"showMap(this," + result[i]['geometry']['location']['lat']+","+result[i]['geometry']['location']['lng']+"); return false;\">" + result[i]['vicinity'] +
+                        "</td></tr>";
+                    }
+                }
+                html_text += "</tbody></table>";
+                document.getElementById("resultTable").innerHTML=html_text;
+            }
+
+        }
+        function showReviewsAndPhotos(){
+            var currentPlaceDetailsjson = <?php echo $currentPlaceDetailsjson?>;
+
+            if(currentPlaceDetailsjson !== 2222) {
+                var place_result = currentPlaceDetailsjson['result'];
+                var inner_text = "<div id=\"placeName\"><h5>" + place_result['name']+
+                    "</h5></div><br />\n" +
+                    "                <div id=\"reviewDiv\"><p>click to show reviews</p>\n" +
+                    "                <a href=\"#\" onclick=\"showReviews(); return false;\">\n" +
+                    "                    <img id=\"review_image\" src=\"http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png\" width='50' height='20'>\n" +
+                    "                    </a>\n" +
+                    "                    <div id=\"reviews\" style=\"display:none\">";
+                var reviews = place_result['reviews'];
+                if(reviews.length === 0 ){
+                    inner_text += " <table border=\"2\">\n" +
+                        "                <tr><td><b>No reviews found</b></td></tr>\n" +
+                        "            </table>";
+                }else {
+                    inner_text += "<table border=\"2\">";
+
+                    for (var i = 0; i < reviews.length && i < 5; i++) {
+                            inner_text +="<tr><td style=\"text-align:center\"><img width=16 height=16 src=\""+ reviews[i]['profile_photo_url']+"\">"+reviews[i]['author_name']+"</td></tr>";
+                            inner_text +="<tr><td>"+ reviews[i]['text'] +"</td></tr>";
+                    }
+                    inner_text +="</table>            </div>\n" +
+                        "            </div>";
+                    inner_text += "\n" +
+                        "            <div id=\"pictureDiv\"><p>click to show photos</p>\n" +
+                        "            <a href=\"#\" onclick=\"showPhotos(); return false;\">\n" +
+                        "                <img  id=\"photo_image\" src=\"http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png\" width='50' height='20'>\n" +
+                        "                </a>\n" +
+                        "                <div id=\"photos\" style=\"display:none\">";
+                    var photos = place_result['photos'];
+                    if(photos.length === 0 ){
+                        inner_text+="  <table border=\"2\">\n" +
+                            "                <tr><td><b>No photos found</b></td></tr>\n" +
+                            "            </table>"
+                    }else{
+                        inner_text+="<table border=\"2\">";
+                        for (var i = 0; i < photos.length && i < 5; i++) {
+                            inner_text+="<tr><td><a target=\"_blank\" href=\"./image"+i+".png\"><img  src=\"image"+i+".png\"></a></td></tr>";
+                        }
+                        inner_text +="</table>            </div>\n" +
+                            "            </div>";
+                    }
+                }
+                document.getElementById("singlePlaceReview").innerHTML=inner_text;
+            }
+
+        }
         function radioCheck() { //enable and required location text when location is checked ~
             if(document.getElementById('here').checked==true) {
                 document.getElementById('otherLocationName').disabled=true;
@@ -139,7 +216,6 @@ $currentPlaceDetailsjson =2222;
 
         function showResultTable() { // show result table after submit
             console.log(document.getElementById('keyword').value);
-            placeNearByjson = <?php echo $currentPlaceDetailsjson; ?>;
         }
 
         function singlePlace(resultId) {
@@ -281,90 +357,92 @@ $currentPlaceDetailsjson =2222;
         <input type="submit" name="submit" id="searchButton" value="Search" onclick="showResultTable()"/>
         <input type="button" name="clear" value="Clear" onclick="clearForm()"/>
             <input id="place_id" type="place_id" name="place_id" style="display:none" value=""/>
+            <input id="lat" type="lat" name="lat" style="display:none" value=""/>
+            <input id="lon" type="lon" name="lon" style="display:none" value=""/>
         </div>
     </form>
     <div id="singlePlaceReview" style="text-align:center">
-        <?php
-            if($currentPlaceDetailsjson != 2222) {
-                $currentPlaceDetailsjson = json_decode($currentPlaceDetailsjson, true);
-                 $place_result = $currentPlaceDetailsjson['result'];
-        ?>
-            <div id="placeName"><h5>  <?php echo $place_result['name'] ?></h5></div><br />
-            <div id="reviewDiv"><p>click to show reviews</p>
-                <a href="#" onclick="showReviews(); return false;">
-                <img id="review_image" src="http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png" width='50' height='20'>
-                </a>
-                    <div id="reviews" style="display:none">
-                        <?php
-                        $reviews = $place_result['reviews'];
-                        if(sizeof($reviews) == 0) {
-                        ?>
-                         <table border="2">
-                             <tr><td><b>No reviews found</b></td></tr>
-                         </table>
-                        <?php
-                        }else{
-                            $review_html="<table border=\"2\">";
-                            for ($i = 0; $i < sizeof($reviews) && $i < 5; $i++) {
-                                $review_html.="<tr><td style=\"text-align:center\"><img width=16 height=16 src=\"".$reviews[$i]['profile_photo_url']."\">".$reviews[$i]['author_name']."</td></tr>";
-                                 $review_html.="<tr><td>".$reviews[$i]['text']."</td></tr>";
-                            }
-                            $review_html.="</table>";
-                            echo $review_html;
-                        }
-                        ?>
-                    </div>
-            </div>
-            <div id="pictureDiv"><p>click to show photos</p>
-                <a href="#" onclick="showPhotos(); return false;">
-                <img  id="photo_image" src="http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png" width='50' height='20'>
-                </a>
-                    <div id="photos" style="display:none">
-                        <?php
-                        $photos = $place_result['photos'];
-                        if(sizeof($photos) == 0) {
-                            ?>
-                            <table border="2">
-                                <tr><td><b>No photos found</b></td></tr>
-                            </table>
-                            <?php
-                        }else{
-                            $photo_html="<table border=\"2\">";
-                            for ($i = 0; $i < sizeof($photos) && $i < 5; $i++) {
-                                $photo_html.="<tr><td><a target=\"_blank\" href=\"./image".$i.".png\"><img  src=\"image".$i.".png\"></a></td></tr>";
-                            }
-                            $photo_html.="</table>";
-                            echo $photo_html;
-                        }
-                        ?>
-                    </div>
-            </div>
-        <?php
-            }
-        ?>
+<!--        --><?php
+//            if($currentPlaceDetailsjson != 2222) {
+//                $currentPlaceDetailsjson = json_decode($currentPlaceDetailsjson, true);
+//                 $place_result = $currentPlaceDetailsjson['result'];
+//        ?>
+<!--            <div id="placeName"><h5>  --><?php //echo $place_result['name'] ?><!--</h5></div><br />-->
+<!--            <div id="reviewDiv"><p>click to show reviews</p>-->
+<!--                <a href="#" onclick="showReviews(); return false;">-->
+<!--                <img id="review_image" src="http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png" width='50' height='20'>-->
+<!--                </a>-->
+<!--                    <div id="reviews" style="display:none">-->
+<!--                        --><?php
+//                        $reviews = $place_result['reviews'];
+//                        if(sizeof($reviews) == 0) {
+//                        ?>
+<!--                         <table border="2">-->
+<!--                             <tr><td><b>No reviews found</b></td></tr>-->
+<!--                         </table>-->
+<!--                        --><?php
+//                        }else{
+//                            $review_html="<table border=\"2\">";
+//                            for ($i = 0; $i < sizeof($reviews) && $i < 5; $i++) {
+//                                $review_html.="<tr><td style=\"text-align:center\"><img width=16 height=16 src=\"".$reviews[$i]['profile_photo_url']."\">".$reviews[$i]['author_name']."</td></tr>";
+//                                 $review_html.="<tr><td>".$reviews[$i]['text']."</td></tr>";
+//                            }
+//                            $review_html.="</table>";
+//                            echo $review_html;
+//                        }
+//                        ?>
+<!--                    </div>-->
+<!--            </div>-->
+<!--            <div id="pictureDiv"><p>click to show photos</p>-->
+<!--                <a href="#" onclick="showPhotos(); return false;">-->
+<!--                <img  id="photo_image" src="http://cs-server.usc.edu:45678/hw/hw6/images/arrow_down.png" width='50' height='20'>-->
+<!--                </a>-->
+<!--                    <div id="photos" style="display:none">-->
+<!--                        --><?php
+//                        $photos = $place_result['photos'];
+//                        if(sizeof($photos) == 0) {
+//                            ?>
+<!--                            <table border="2">-->
+<!--                                <tr><td><b>No photos found</b></td></tr>-->
+<!--                            </table>-->
+<!--                            --><?php
+//                        }else{
+//                            $photo_html="<table border=\"2\">";
+//                            for ($i = 0; $i < sizeof($photos) && $i < 5; $i++) {
+//                                $photo_html.="<tr><td><a target=\"_blank\" href=\"./image".$i.".png\"><img  src=\"image".$i.".png\"></a></td></tr>";
+//                            }
+//                            $photo_html.="</table>";
+//                            echo $photo_html;
+//                        }
+//                        ?>
+<!--                    </div>-->
+<!--            </div>-->
+<!--        --><?php
+//            }
+//        ?>
     </div>
     <p id="resultTable">
-        <?php
-            if($placesNearByjson != 1111) {
-                $placesNearByjson = json_decode($placesNearByjson, true);
-                $result = $placesNearByjson['results'];
-                $html_text = "<table border='2'><tbody>";
-                if (sizeof($result) == 0) {
-                    $html_text .= "<tr><td>No Records has been found</td></tr>";
-                } //establish result table data
-                else {
-                    $html_text .= "<tr><th>Category</th><th>Name</th><th>Address</th></tr>";
-                    for ($i = 0; $i < sizeof($result); $i++) {
-                        $html_text .= "<tr><td><img src='" . $result[$i]['icon'] .
-                            "'</td><td><a href=\"#\" onclick=\"singlePlace('" . $result[$i]['place_id'] . "'); return false;\">" . $result[$i]['name'] .
-                            "</td><td><a href=\"#\" onclick=\"showMap(this," . $result[$i]['geometry']['location']['lat'].",".$result[$i]['geometry']['location']['lng']. "); return false;\">" . $result[$i]['vicinity'] .
-                            "</td></tr>";
-                    }
-                }
-                $html_text .= "</tbody></table>";
-                echo $html_text;
-            }
-        ?>
+<!--        --><?php
+//            if($placesNearByjson != 1111) {
+//                $placesNearByjson = json_decode($placesNearByjson, true);
+//                $result = $placesNearByjson['results'];
+//                $html_text = "<table border='2'><tbody>";
+//                if (sizeof($result) == 0) {
+//                    $html_text .= "<tr><td>No Records has been found</td></tr>";
+//                } //establish result table data
+//                else {
+//                    $html_text .= "<tr><th>Category</th><th>Name</th><th>Address</th></tr>";
+//                    for ($i = 0; $i < sizeof($result); $i++) {
+//                        $html_text .= "<tr><td><img src='" . $result[$i]['icon'] .
+//                            "'</td><td><a href=\"#\" onclick=\"singlePlace('" . $result[$i]['place_id'] . "'); return false;\">" . $result[$i]['name'] .
+//                            "</td><td><a href=\"#\" onclick=\"showMap(this," . $result[$i]['geometry']['location']['lat'].",".$result[$i]['geometry']['location']['lng']. "); return false;\">" . $result[$i]['vicinity'] .
+//                            "</td></tr>";
+//                    }
+//                }
+//                $html_text .= "</tbody></table>";
+//                echo $html_text;
+//            }
+//        ?>
     </p>
     <div id="map" style="width:400px;height:280px;display:none;position:absolute">
         <div style="position:absolute;z-index:1">
@@ -388,6 +466,8 @@ $currentPlaceDetailsjson =2222;
             document.getElementById("searchButton").disabled=true;
             if(arguments[0].status == 'success') {
                 document.getElementById("searchButton").disabled=false;
+                document.getElementById("lat").value=arguments[0].lat;
+                document.getElementById("lon").value=arguments[0].lon;
             }
             /*xmlhttp0 = new XMLHttpRequest();
             URLgeo = "place.php?lat=" + arguments[0].lat + "&lon=" + arguments[0].lon;
